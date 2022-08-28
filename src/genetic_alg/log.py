@@ -62,8 +62,10 @@ def get_logger(name: Union[str, Callable], logLevel: Union[int, str, None] = Non
         paths = []
         for path_name in reversed(module_path):
             if path_name == "genetic_alg":
+                paths.append(path_name)
                 break
             paths.append(path_name)
+        paths.reverse()
         paths.append(name.__name__)
         name = ".".join(paths)
 
