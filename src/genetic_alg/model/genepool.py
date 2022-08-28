@@ -25,13 +25,12 @@ class GenePool(BaseGenePool):
 
         return (self._best_fitness, self._median_fitness, average_fitness, self._worst_fitness)
 
-    def next_generation(self, selector: Callable, crossover: Callable, elite_count: int = 1):  # 다음 세대
+    def next_generation(self, selector: Callable, crossover: Callable):  # 다음 세대
         assert len(self._data) % 2 == 0, "유전자 수가 짝수가 아닙니다."
-        elite_count *= 2
 
         parents_pair_list = selector(self._data)
 
-        crossover(parents_pair_list, self, self[:elite_count])
+        crossover(parents_pair_list, self, self[0])
 
     def mutation(self, ratio):  # 돌연변이
         mutation_count = round(len(self) * ratio)

@@ -113,7 +113,7 @@ def main(**kwargs):
         return total_error
 
     zfill_len = len(str(settings["epoch"]))
-    for e_idx in tqdm(range(settings["epoch"])):
+    for e_idx in tqdm(range(settings["epoch"]), leave=False):
         genepool.fitness_calc(calculate_fitness)
         if e_idx % 100 == 99:
             logger.info(
@@ -123,8 +123,8 @@ def main(**kwargs):
                     f"중앙 적합도: [{round(genepool.median_fitness)}] "
                     f"평균 적합도: [{round(genepool.average_fitness)}] "
                     f"최저 적합도: [{round(genepool.worst_fitness)}]\n"
-                    "상위 유전자: " + str(genepool[0])
-                    # "상위 유전자: " + "\n상위 유전자: ".join([str(g) for g in genepool[:3]])
+                    # "상위 유전자: " + str(genepool[0])
+                    "상위 유전자: " + "\n상위 유전자: ".join([str(g) for g in genepool[:3]])
                 )
             )
 

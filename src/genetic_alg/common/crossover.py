@@ -5,7 +5,7 @@ from genetic_alg.model.gene import Gene
 from genetic_alg.model.genepool import GenePool
 
 
-def single_point_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, elite_list: List[Gene]):
+def single_point_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, elite_gene: Gene):
     gene_len = len(gene_list[0])
     genepool_len = len(genepool)
 
@@ -13,7 +13,7 @@ def single_point_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePoo
     while crossover_idx < genepool_len:
         child_gene = genepool[crossover_idx]
 
-        if child_gene in elite_list:
+        if child_gene is elite_gene:
             crossover_idx += 1
             continue
 
@@ -32,7 +32,7 @@ def single_point_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePoo
         crossover_idx += 1
 
 
-def two_point_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, elite_list: List[Gene]):
+def two_point_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, elite_gene: Gene):
     gene_len = len(gene_list[0])
     genepool_len = len(genepool)
 
@@ -40,7 +40,7 @@ def two_point_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, 
     while crossover_idx < genepool_len:
         child_gene = genepool[crossover_idx]
 
-        if child_gene in elite_list:
+        if child_gene is elite_gene:
             crossover_idx += 1
             continue
 
@@ -64,5 +64,5 @@ def two_point_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, 
         crossover_idx += 1
 
 
-def uniform_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, elite_list: List[Gene]):
+def uniform_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, elite_gene: Gene):
     pass
