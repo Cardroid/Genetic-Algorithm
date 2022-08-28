@@ -22,6 +22,7 @@ def unhandled_exception_hook(exc_type, exc_value, exc_traceback):
 sys.excepthook = unhandled_exception_hook
 
 DIR_PATH = "logs"
+ROOT_LOG_LEVEL = "info"
 
 LOG_LEVEL_DICT = {
     "critical": 50,
@@ -40,21 +41,22 @@ LOG_LEVEL_DICT = {
 }
 
 
-def get_logger(name: Union[str, Callable], logLevel: Union[int, str] = logging.INFO) -> logging.Logger:
+def get_logger(name: Union[str, Callable], logLevel: Union[int, str, None] = None, stackFrameLevel: int = 1) -> logging.Logger:
     """로거를 생성합니다.
 
     Args:
         name (Union[str, Callable]): 로거 이름 또는 호출 함수
-        logLevel (Union[int, str], optional): 출력 로그 레벨. Default value is the value of SETTINGS.
+        logLevel (Union[int, str], optional): 출력 로그 레벨.
+        stackFrameLevel (int, optional): 자동 함수 이름 추적을 사용할 경우, 스택의 Index 번호.
 
     Returns:
         logging.Logger: 로거
     """
 
-    global DIR_PATH
+    global DIR_PATH, ROOT_LOG_LEVEL
 
     if callable(name):
-        frm = inspect.stack()[1]
+        frm = inspect.stack()[stackFrameLevel]
         path = os.path.normpath(os.path.splitext(frm.filename)[0])
         module_path = path.split(os.sep)
         paths = []
@@ -70,6 +72,9 @@ def get_logger(name: Union[str, Callable], logLevel: Union[int, str] = logging.I
         root_logger_setup(DIR_PATH)
 
     logger = logging.getLogger(name)
+
+    if logLevel == None:
+        logLevel = ROOT_LOG_LEVEL
 
     if isinstance(logLevel, str):
         if (ll := LOG_LEVEL_DICT.get(logLevel.lower())) != None:
