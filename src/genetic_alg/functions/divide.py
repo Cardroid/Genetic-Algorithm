@@ -58,7 +58,7 @@ def main(**kwargs):
     if settings["gene_count"] > 300:
         settings["gene_count"] = 300
 
-    settings["epoch"] = settings["gene_count"] * target_list_len
+    settings["epoch"] = round(settings["gene_count"] * target_list_len / 5)
 
     settings["mutation_ratio"] = 0.05
     settings["target_fitness"] = 0
@@ -113,8 +113,18 @@ def main(**kwargs):
         return total_error
 
     zfill_len = len(str(settings["epoch"]))
+    if use_graph:
+        x_list, y_best_list, y_average_list = [], [], []
     for e_idx in tqdm(range(settings["epoch"]), leave=False):
-        genepool.fitness_calc(calculate_fitness)
+        current_fitness = genepool.fitness_calc(calculate_fitness)
+
+        if use_graph:
+            x_list.append(e_idx)
+            y_best_list.append(current_fitness[0])
+            # y_median_list.append(current_fitness[1])
+            y_average_list.append(current_fitness[2])
+            # y_worst_list.append(current_fitness[3])
+
         if e_idx % 100 == 99:
             logger.info(
                 (
@@ -151,6 +161,23 @@ def main(**kwargs):
     for idx, divide in enumerate(gene_answer_list):
         result_msg.append(f"[{str(idx + 1).zfill(gene_answer_list_str_len)}]번 합계: [{sum(divide)}] 분배목록: [" + ",".join([str(d) for d in divide]) + "]")
     logger.info("\n".join(result_msg))
+
+    if use_graph:
+        from matplotlib import pyplot as plt
+
+        plt.figure(0, figsize=(16, 6), dpi=100)
+
+        plt.plot(x_list, y_best_list)
+        # plt.plot(x_list, y_median_list)
+        plt.plot(x_list, y_average_list)
+        # plt.plot(x_list, y_worst_list)
+
+        # plt.title("")
+        plt.xlabel("Epoch")
+        plt.ylabel("Fitness")
+        plt.tight_layout()
+
+        plt.show()
 
     result["result"] = gene_answer_list
 

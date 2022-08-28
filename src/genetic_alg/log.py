@@ -203,10 +203,10 @@ class HandlerDestFilter(logging.Filter):
         self.log_level = logLevel
 
     def filter(self, record: logging.LogRecord):
-        if record.levelno < self.log_level:
+        if record.name.startswith("matplotlib") or record.name.startswith("PIL"):
             return False
 
-        if self.log_level > 0 and record.name.startswith("matplotlib") or record.name.startswith("PIL"):
+        if record.levelno < self.log_level:
             return False
 
         self._format_line(record=record)
