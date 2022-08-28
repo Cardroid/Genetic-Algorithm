@@ -2,6 +2,8 @@ import setuptools
 
 required_packages = [
     "tqdm",
+    "colorlog",
+    "matplotlib",
 ]
 
 setuptools.setup(
@@ -15,5 +17,5 @@ setuptools.setup(
     packages=setuptools.find_packages(where="src"),
     package_dir={"": "src"},
     python_requires=">=3.8",
-    entry_points={"console_scripts": ["gene=py_media_compressor.entry.encode:main"]},
+    entry_points={"console_scripts": ["gene=genetic_alg.entry:main"]},
 )
