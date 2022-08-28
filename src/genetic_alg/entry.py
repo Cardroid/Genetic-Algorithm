@@ -7,11 +7,7 @@ from genetic_alg.functions import divide
 
 # 모드 정의
 MODE_LIST = {
-    "divide": {
-        "desc": "분할 문제를 해결합니다. (기본 모드)",
-        "req_desc": "데이터 파일의 첫 번째 줄에 분할 개수 및 배율, 두 번째 줄에 분할 해야하는 수를 작성해주세요.",
-        "func": divide.main,
-    }
+    "divide": divide.MODE_PROPERTY,
 }
 
 
