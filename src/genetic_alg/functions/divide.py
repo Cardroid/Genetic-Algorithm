@@ -231,7 +231,7 @@ def main(**kwargs):
         result_msg.append(
             f"[{str(idx + 1).zfill(gene_answer_list_str_len)}]번 "
             f"합계: [{str(divide_sum := sum(divide)).rjust(target_list_sum_str_len)}] "
-            f"목표 합계: [{str(answer_list[idx]).rjust(target_list_sum_str_len)}] "
+            f"목표 합계: [{str(answer_list[idx]).rjust(target_list_sum_str_len + 2)}] "
             f"비율: [{str(round((divide_sum / target_list_sum) * 100, 2)).rjust(6)}%] "
             f"목표 비율: [{str(round(dest_list[idx] * 100, 2)).rjust(6)}%] "
             "분배목록: [" + ",".join([str(d) for d in divide]) + "]"
