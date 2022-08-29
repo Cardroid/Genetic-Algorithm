@@ -165,6 +165,7 @@ def main(**kwargs):
         plt.tight_layout()
         plt.show(block=False)
 
+    before_best_fitness = -1
     for e_idx in tqdm(range(settings["epoch"]), leave=False, desc="Generation evolving..."):
         best_fitness, median_fitness, average_fitness, worst_fitness = genepool.fitness_calc(calculate_fitness)
 
@@ -183,7 +184,9 @@ def main(**kwargs):
             logger.info(f"목표 적응도를 달성하였으므로 자동으로 종료됩니다.")
             break
 
-        if e_idx % 100 == 99:
+        # if e_idx % 100 == 99:
+        if before_best_fitness != best_fitness:
+            before_best_fitness = best_fitness
             logger.info(
                 (
                     f"[{str(e_idx + 1).rjust(epoch_str_len)} 세대] "
@@ -191,8 +194,8 @@ def main(**kwargs):
                     # f"중앙 적응도: [{round(median_fitness)}] "
                     f"평균 적응도: [{round(average_fitness, 1)}] "
                     f"최저 적응도: [{round(worst_fitness, 1)}]\n"
-                    # "상위 유전자: " + str(genepool[0])
-                    "상위 유전자: " + "\n상위 유전자: ".join([str(g) for g in genepool[:3]])
+                    "상위 유전자: " + str(genepool[0])
+                    # "상위 유전자: " + "\n상위 유전자: ".join([str(g) for g in genepool[:3]])
                 )
             )
 
