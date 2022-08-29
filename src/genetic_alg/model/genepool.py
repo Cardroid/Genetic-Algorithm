@@ -8,7 +8,7 @@ class GenePool(BaseGenePool):
     def __init__(self) -> None:
         super().__init__()
 
-    def fitness_calc(self, calc_func: Callable):  # 적합도 계산
+    def fitness_calc(self, calc_func: Callable):  # 적응도 계산
         total_fitness = 0
         for gene in self._data:
             fitness = gene.fitness_calc(calc_func)
@@ -28,7 +28,7 @@ class GenePool(BaseGenePool):
     def next_generation(self, selector: Callable, crossover: Callable):  # 다음 세대
         assert len(self._data) % 2 == 0, "유전자 수가 짝수가 아닙니다."
 
-        parents_pair_list = selector(self._data)
+        parents_pair_list = selector(self)
 
         crossover(parents_pair_list, self, self[0])
 

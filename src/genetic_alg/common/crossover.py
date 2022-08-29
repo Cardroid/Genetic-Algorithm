@@ -5,8 +5,8 @@ from genetic_alg.model.gene import Gene
 from genetic_alg.model.genepool import GenePool
 
 
-def single_point_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, elite_gene: Gene):
-    gene_len = len(gene_list[0])
+def single_point_crossover(parents_gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, elite_gene: Gene):
+    gene_len = len(parents_gene_list[0])
     genepool_len = len(genepool)
 
     crossover_idx = 0
@@ -17,7 +17,7 @@ def single_point_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePoo
             crossover_idx += 1
             continue
 
-        x, y = random.sample(gene_list, k=2)
+        x, y = random.sample(parents_gene_list, k=2)
         # 000000|0000000000000000000
         cut_line = random.randint(1, gene_len - 2)
 
@@ -33,8 +33,8 @@ def single_point_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePoo
         crossover_idx += 1
 
 
-def two_point_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, elite_gene: Gene):
-    gene_len = len(gene_list[0])
+def two_point_crossover(parents_gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, elite_gene: Gene):
+    gene_len = len(parents_gene_list[0])
     genepool_len = len(genepool)
 
     crossover_idx = 0
@@ -45,7 +45,7 @@ def two_point_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, 
             crossover_idx += 1
             continue
 
-        x, y = random.sample(gene_list, k=2)
+        x, y = random.sample(parents_gene_list, k=2)
         # 000000|0000000000000000000
         l_cut_line = random.randint(1, gene_len - 3)
         # 000000|0000000000000|00000
@@ -67,5 +67,5 @@ def two_point_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, 
         crossover_idx += 1
 
 
-def uniform_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, elite_gene: Gene):
+def uniform_crossover(parents_gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, elite_gene: Gene):
     pass

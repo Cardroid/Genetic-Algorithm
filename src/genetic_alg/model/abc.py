@@ -44,7 +44,7 @@ class BaseGene(BaseClass):
         return self._fitness
 
     @abstractmethod
-    def fitness_calc(self, calc_func: Callable, data):
+    def fitness_calc(self, calc_func: Callable):
         pass
 
     def _get_data(self) -> List[int]:

@@ -26,6 +26,11 @@ def main(**kwargs):
     if use_graph:
         logger.debug("그래프 시각화를 사용합니다.")
 
+        from matplotlib import pyplot as plt
+        from matplotlib.animation import FuncAnimation
+
+        figure_counter = 0
+
     logger.info("데이터 파일 로드 중...")
 
     with open(data_filepath, "r", encoding="utf-8") as f:
@@ -55,11 +60,11 @@ def main(**kwargs):
     # Setup
     settings = {}
 
-    settings["gene_count"] = dest_list_len * 20
-    if settings["gene_count"] > 300:
-        settings["gene_count"] = 300
+    settings["gene_count"] = dest_list_len * 40
+    if settings["gene_count"] > 1000:
+        settings["gene_count"] = 1000
 
-    settings["epoch"] = round(settings["gene_count"] * target_list_len / 50)
+    settings["epoch"] = round(settings["gene_count"] * target_list_len / 10)
 
     settings["mutation_ratio"] = 0.2
     settings["target_fitness"] = 0
@@ -83,8 +88,8 @@ def main(**kwargs):
                 else:
                     return parsed_value
 
-        settings["epoch"] = try_input(int, f"중단할 세대을 입력해주세요 (int) [{settings['epoch']}]: ", settings["epoch"])
-        settings["target_fitness"] = try_input(float, f"목표 적합도를 입력해주세요 (0일 경우, 적합도 종료조건이 비활성화 됩니다) (float) [{settings['target_fitness']}]: ", settings["target_fitness"])
+        settings["epoch"] = try_input(int, f"학습 중단 세대을 입력해주세요 (int) [{settings['epoch']}]: ", settings["epoch"])
+        settings["target_fitness"] = try_input(float, f"목표 적응도를 입력해주세요 (0일 경우, 적응도 종료조건이 비활성화 됩니다) (float) [{settings['target_fitness']}]: ", settings["target_fitness"])
         settings["gene_count"] = try_input(int, f"유전자 수를 입력해주세요 (int) [{settings['gene_count']}]: ", settings["gene_count"])
         settings["mutation_ratio"] = try_input(float, f"돌연변이 비율을 입력해주세요 (float) [{settings['mutation_ratio']}]: ", settings["mutation_ratio"])
 
@@ -116,7 +121,51 @@ def main(**kwargs):
     epoch_str_len = len(str(settings["epoch"]))
     if use_graph:
         x_list, y_best_list, y_average_list = [], [], []
-    for e_idx in tqdm(range(settings["epoch"]), leave=False):
+
+        for gene in genepool:
+            gene.fitness_calc(calculate_fitness)
+
+        gene_x_list = [i for i in range(1, len(genepool) + 1)]
+
+        plt.figure(figure_counter, figsize=(16, 8), dpi=80)
+        figure_counter += 1
+        plt.scatter(gene_x_list, [fit.fitness for fit in genepool])
+
+        plt.xlabel("Gene Number")
+        plt.ylabel("Fitness")
+
+        plt.title(f"Init Gene Fitness")
+        plt.tight_layout()
+        plt.show()
+
+        plt.figure(figure_counter, figsize=(16, 8), dpi=80)
+        figure_counter += 1
+
+        e_idx = 0
+        is_frame_update_need = [True]
+
+        def animate(i):
+            if is_frame_update_need[0]:
+                plt.cla()
+                plt.scatter(gene_x_list, [fit.fitness for fit in genepool])
+
+                plt.title((f"Epoch {str(e_idx).rjust(epoch_str_len)} ".ljust(20) + f"Best: {round(best_fitness, 3)} ".ljust(20) + f"Avg: {round(genepool.average_fitness, 3)}".ljust(20)))
+                plt.xlabel("Gene Number")
+                plt.ylabel("Fitness")
+
+                is_frame_update_need[0] = False
+
+        ani = FuncAnimation(plt.gcf(), animate)
+
+        plt.title(f"Epoch {str(e_idx).rjust(epoch_str_len)}")
+        plt.xlabel("Gene Number")
+        plt.ylabel("Fitness")
+
+        plt.autoscale(enable=True)
+        plt.tight_layout()
+        plt.show(block=False)
+
+    for e_idx in tqdm(range(settings["epoch"]), leave=False, desc="Generation evolving..."):
         best_fitness, median_fitness, average_fitness, worst_fitness = genepool.fitness_calc(calculate_fitness)
 
         if use_graph:
@@ -126,25 +175,37 @@ def main(**kwargs):
             y_average_list.append(average_fitness)
             # y_worst_list.append(worst_fitness)
 
+            if e_idx % 10 == 0:
+                is_frame_update_need[0] = True
+                plt.pause(0.06)
+
         if best_fitness <= settings["target_fitness"]:
-            logger.info(f"목표 적합도를 달성하였으므로 자동으로 종료됩니다.")
+            logger.info(f"목표 적응도를 달성하였으므로 자동으로 종료됩니다.")
             break
 
         if e_idx % 100 == 99:
             logger.info(
                 (
                     f"[{str(e_idx + 1).rjust(epoch_str_len)} 세대] "
-                    f"최고 적합도: [{round(best_fitness)}] "
-                    # f"중앙 적합도: [{round(median_fitness)}] "
-                    f"평균 적합도: [{round(average_fitness)}] "
-                    f"최저 적합도: [{round(worst_fitness)}]\n"
+                    f"최고 적응도: [{round(best_fitness, 1)}] "
+                    # f"중앙 적응도: [{round(median_fitness)}] "
+                    f"평균 적응도: [{round(average_fitness, 1)}] "
+                    f"최저 적응도: [{round(worst_fitness, 1)}]\n"
                     # "상위 유전자: " + str(genepool[0])
                     "상위 유전자: " + "\n상위 유전자: ".join([str(g) for g in genepool[:3]])
                 )
             )
 
         genepool.mutation(settings["mutation_ratio"])
-        genepool.next_generation(selection.rank, crossover.two_point_crossover)
+        genepool.next_generation(
+            selection.method_helper(
+                selection.heuristic_rank,
+                best_rank_ratio=0.1,
+                randoom_sample_cutoff_ratio=0.4,
+                randoom_sample_k=20,
+            ),
+            crossover.two_point_crossover,
+        )
 
     gene_answer_list = [[] for _ in range(len(answer_list))]
     for target_idx, dest_idx in enumerate(genepool[0].get_data()):
@@ -153,10 +214,10 @@ def main(**kwargs):
     logger.info(
         (
             f"[결과] "
-            f"최고 적합도: [{round(genepool.best_fitness)}] "
-            # f"중앙 적합도: [{round(genepool.median_fitness)}] "
-            f"평균 적합도: [{round(genepool.average_fitness)}] "
-            f"최저 적합도: [{round(genepool.worst_fitness)}]\n"
+            f"최고 적응도: [{round(genepool.best_fitness, 1)}] "
+            # f"중앙 적응도: [{round(genepool.median_fitness)}] "
+            f"평균 적응도: [{round(genepool.average_fitness, 1)}] "
+            f"최저 적응도: [{round(genepool.worst_fitness, 1)}]\n"
             "상위 유전자: " + str(genepool[0])
         )
     )
@@ -167,6 +228,7 @@ def main(**kwargs):
         result_msg.append(
             f"[{str(idx + 1).zfill(gene_answer_list_str_len)}]번 "
             f"합계: [{str(divide_sum := sum(divide)).rjust(target_list_sum_str_len)}] "
+            f"목표 합계: [{str(answer_list[idx]).rjust(target_list_sum_str_len)}] "
             f"비율: [{str(round((divide_sum / target_list_sum) * 100, 2)).rjust(6)}%] "
             f"목표 비율: [{str(round(dest_list[idx] * 100, 2)).rjust(6)}%] "
             "분배목록: [" + ",".join([str(d) for d in divide]) + "]"
@@ -174,9 +236,8 @@ def main(**kwargs):
     logger.info("\n".join(result_msg))
 
     if use_graph:
-        from matplotlib import pyplot as plt
-
-        plt.figure(0, figsize=(16, 6), dpi=100)
+        plt.figure(figure_counter, figsize=(16, 8), dpi=80)
+        figure_counter += 1
 
         plt.plot(x_list, y_best_list)
         # plt.plot(x_list, y_median_list)
@@ -188,6 +249,7 @@ def main(**kwargs):
         plt.ylabel("Fitness")
         plt.tight_layout()
 
+        plt.tight_layout()
         plt.show()
 
     result["result"] = gene_answer_list
