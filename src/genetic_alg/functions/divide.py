@@ -48,6 +48,7 @@ def main(**kwargs):
     dest_list_len = len(dest_list)
     target_list_len = len(target_list)
     target_list_sum = sum(target_list)
+    target_list_sum_str_len = len(str(target_list_sum))
     answer_list = [target_list_sum * dest for dest in dest_list]
     logger.info(f"분배 수: [{dest_list_len}], 분배 항목 수: [{target_list_len}]")
 
@@ -58,9 +59,9 @@ def main(**kwargs):
     if settings["gene_count"] > 300:
         settings["gene_count"] = 300
 
-    settings["epoch"] = round(settings["gene_count"] * target_list_len / 5)
+    settings["epoch"] = round(settings["gene_count"] * target_list_len / 50)
 
-    settings["mutation_ratio"] = 0.05
+    settings["mutation_ratio"] = 0.2
     settings["target_fitness"] = 0
 
     if use_setup:
@@ -112,27 +113,31 @@ def main(**kwargs):
 
         return total_error
 
-    zfill_len = len(str(settings["epoch"]))
+    epoch_str_len = len(str(settings["epoch"]))
     if use_graph:
         x_list, y_best_list, y_average_list = [], [], []
     for e_idx in tqdm(range(settings["epoch"]), leave=False):
-        current_fitness = genepool.fitness_calc(calculate_fitness)
+        best_fitness, median_fitness, average_fitness, worst_fitness = genepool.fitness_calc(calculate_fitness)
 
         if use_graph:
             x_list.append(e_idx)
-            y_best_list.append(current_fitness[0])
-            # y_median_list.append(current_fitness[1])
-            y_average_list.append(current_fitness[2])
-            # y_worst_list.append(current_fitness[3])
+            y_best_list.append(best_fitness)
+            # y_median_list.append(median_fitness)
+            y_average_list.append(average_fitness)
+            # y_worst_list.append(worst_fitness)
+
+        if best_fitness <= settings["target_fitness"]:
+            logger.info(f"목표 적합도를 달성하였으므로 자동으로 종료됩니다.")
+            break
 
         if e_idx % 100 == 99:
             logger.info(
                 (
-                    f"[{str(e_idx + 1).zfill(zfill_len)} 세대] "
-                    f"최고 적합도: [{round(genepool.best_fitness)}] "
-                    f"중앙 적합도: [{round(genepool.median_fitness)}] "
-                    f"평균 적합도: [{round(genepool.average_fitness)}] "
-                    f"최저 적합도: [{round(genepool.worst_fitness)}]\n"
+                    f"[{str(e_idx + 1).rjust(epoch_str_len)} 세대] "
+                    f"최고 적합도: [{round(best_fitness)}] "
+                    # f"중앙 적합도: [{round(median_fitness)}] "
+                    f"평균 적합도: [{round(average_fitness)}] "
+                    f"최저 적합도: [{round(worst_fitness)}]\n"
                     # "상위 유전자: " + str(genepool[0])
                     "상위 유전자: " + "\n상위 유전자: ".join([str(g) for g in genepool[:3]])
                 )
@@ -149,7 +154,7 @@ def main(**kwargs):
         (
             f"[결과] "
             f"최고 적합도: [{round(genepool.best_fitness)}] "
-            f"중앙 적합도: [{round(genepool.median_fitness)}] "
+            # f"중앙 적합도: [{round(genepool.median_fitness)}] "
             f"평균 적합도: [{round(genepool.average_fitness)}] "
             f"최저 적합도: [{round(genepool.worst_fitness)}]\n"
             "상위 유전자: " + str(genepool[0])
@@ -159,7 +164,13 @@ def main(**kwargs):
     result_msg = ["[최종정리]"]
     gene_answer_list_str_len = len(str(len(gene_answer_list)))
     for idx, divide in enumerate(gene_answer_list):
-        result_msg.append(f"[{str(idx + 1).zfill(gene_answer_list_str_len)}]번 합계: [{sum(divide)}] 분배목록: [" + ",".join([str(d) for d in divide]) + "]")
+        result_msg.append(
+            f"[{str(idx + 1).zfill(gene_answer_list_str_len)}]번 "
+            f"합계: [{str(divide_sum := sum(divide)).rjust(target_list_sum_str_len)}] "
+            f"비율: [{str(round((divide_sum / target_list_sum) * 100, 2)).rjust(6)}%] "
+            f"목표 비율: [{str(round(dest_list[idx] * 100, 2)).rjust(6)}%] "
+            "분배목록: [" + ",".join([str(d) for d in divide]) + "]"
+        )
     logger.info("\n".join(result_msg))
 
     if use_graph:

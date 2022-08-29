@@ -18,7 +18,8 @@ def single_point_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePoo
             continue
 
         x, y = random.sample(gene_list, k=2)
-        cut_line = random.randint(0, gene_len - 1)
+        # 000000|0000000000000000000
+        cut_line = random.randint(1, gene_len - 2)
 
         gene_idx = 0
         for d in x[:cut_line]:
@@ -45,8 +46,10 @@ def two_point_crossover(gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, 
             continue
 
         x, y = random.sample(gene_list, k=2)
-        l_cut_line = random.randint(0, gene_len - 2)
-        r_cut_line = random.randint(l_cut_line, gene_len - 1)
+        # 000000|0000000000000000000
+        l_cut_line = random.randint(1, gene_len - 3)
+        # 000000|0000000000000|00000
+        r_cut_line = random.randint(l_cut_line, gene_len - 2)
 
         gene_idx = 0
         for d in x[:l_cut_line]:
