@@ -2,7 +2,7 @@ import os
 from pprint import pformat
 import random
 from time import time
-from typing import Callable
+from typing import Callable, List
 
 from tqdm import tqdm
 
@@ -20,6 +20,7 @@ def main(**kwargs):
     data_filepath = kwargs["input"]
     use_setup = kwargs.get("use_setup", True)
     use_graph = kwargs.get("use_graph", True)
+    use_progress_graph = kwargs.get("use_progress_graph", True)
 
     logger = log.get_logger(main)
 
@@ -38,7 +39,7 @@ def main(**kwargs):
 
     try:
         dest_list = [float(d) for d in dest_line.split(" ")]
-        target_list = [int(t) for t in target_line.split(" ")]
+        target_list = sorted([int(t) for t in target_line.split(" ")])
     except:
         logger.error("데이터 파싱에 실패했습니다.")
         return
@@ -47,8 +48,9 @@ def main(**kwargs):
         logger.error("누락된 데이터가 존재합니다.")
         return
 
-    if sum(dest_list) != 1.0:
-        logger.warning(f"분배 비율의 합이 1 이 아닙니다.")
+    if (dest_list_sum := int(sum(dest_list) * 100000)) != 100000:
+        logger.warning(f"분배 비율의 합이 1 이 아닙니다. [{dest_list_sum / 100000}]")
+    dest_list_sum /= 100000
 
     dest_list_len = len(dest_list)
     target_list_len = len(target_list)
@@ -60,13 +62,13 @@ def main(**kwargs):
     # Setup
     settings = {}
 
-    settings["gene_count"] = dest_list_len * 40
-    if settings["gene_count"] > 1000:
-        settings["gene_count"] = 1000
+    settings["gene_count"] = dest_list_len * 12 + 8
+    if settings["gene_count"] > 1024:
+        settings["gene_count"] = 1024
 
     settings["epoch"] = round(settings["gene_count"] * target_list_len / 10)
 
-    settings["mutation_ratio"] = 0.2
+    settings["mutation_ratio"] = 0.25
     settings["target_fitness"] = 0
 
     if use_setup:
@@ -99,8 +101,13 @@ def main(**kwargs):
     result["settings"] = settings
 
     genepool = GenePool()
-    gene_rand_func = lambda: random.randint(0, dest_list_len - 1)
-    genepool.add_genes([Gene([gene_rand_func() for _ in range(target_list_len)], gene_rand_func) for _ in range(settings["gene_count"])])
+
+    def gene_mutation_func(data: List[int]):
+        for _ in range(3):
+            idx = random.randint(0, len(data) - 1)
+            data[idx] = random.randint(0, dest_list_len - 1)
+
+    genepool.add_genes([Gene([random.randint(0, dest_list_len - 1) for _ in range(target_list_len)], gene_mutation_func) for _ in range(settings["gene_count"])])
 
     logger.info(f"초기화가 완료되었습니다.")
 
@@ -138,32 +145,33 @@ def main(**kwargs):
         plt.tight_layout()
         plt.show()
 
-        plt.figure(figure_counter, figsize=(16, 8), dpi=80)
-        figure_counter += 1
+        if use_progress_graph:
+            plt.figure(figure_counter, figsize=(16, 8), dpi=80)
+            figure_counter += 1
 
-        e_idx = 0
-        is_frame_update_need = [True]
+            e_idx = 0
+            is_frame_update_need = [True]
 
-        def animate(i):
-            if is_frame_update_need[0]:
-                plt.cla()
-                plt.scatter(gene_x_list, [fit.fitness for fit in genepool])
+            def animate(i):
+                if is_frame_update_need[0]:
+                    plt.cla()
+                    plt.scatter(gene_x_list, [fit.fitness for fit in genepool])
 
-                plt.title((f"Epoch {str(e_idx).rjust(epoch_str_len)} ".ljust(20) + f"Best: {round(best_fitness, 3)} ".ljust(20) + f"Avg: {round(genepool.average_fitness, 3)}".ljust(20)))
-                plt.xlabel("Gene Number")
-                plt.ylabel("Fitness")
+                    plt.title((f"Epoch {str(e_idx).rjust(epoch_str_len)} ".ljust(20) + f"Best: {round(best_fitness, 3)} ".ljust(20) + f"Avg: {round(genepool.average_fitness, 3)}".ljust(20)))
+                    plt.xlabel("Gene Number")
+                    plt.ylabel("Fitness")
 
-                is_frame_update_need[0] = False
+                    is_frame_update_need[0] = False
 
-        ani = FuncAnimation(plt.gcf(), animate)
+            ani = FuncAnimation(plt.gcf(), animate)
 
-        plt.title(f"Epoch {str(e_idx).rjust(epoch_str_len)}")
-        plt.xlabel("Gene Number")
-        plt.ylabel("Fitness")
+            plt.title(f"Epoch {str(e_idx).rjust(epoch_str_len)}")
+            plt.xlabel("Gene Number")
+            plt.ylabel("Fitness")
 
-        plt.autoscale(enable=True)
-        plt.tight_layout()
-        plt.show(block=False)
+            plt.autoscale(enable=True)
+            plt.tight_layout()
+            plt.show(block=False)
 
     before_best_fitness = -1
     for e_idx in tqdm(range(settings["epoch"]), leave=False, desc="Generation evolving..."):
@@ -176,7 +184,7 @@ def main(**kwargs):
             y_average_list.append(average_fitness)
             # y_worst_list.append(worst_fitness)
 
-            if e_idx % 10 == 0:
+            if use_progress_graph and e_idx % 10 == 0:
                 is_frame_update_need[0] = True
                 plt.pause(0.06)
 
@@ -190,12 +198,12 @@ def main(**kwargs):
             logger.info(
                 (
                     f"[{str(e_idx + 1).rjust(epoch_str_len)} 세대] "
-                    f"최고 적응도: [{round(best_fitness, 1)}] "
+                    f"최고 적응도: [{round(best_fitness, 3)}] "
                     # f"중앙 적응도: [{round(median_fitness)}] "
-                    f"평균 적응도: [{round(average_fitness, 1)}] "
-                    f"최저 적응도: [{round(worst_fitness, 1)}]\n"
-                    "상위 유전자: " + str(genepool[0])
-                    # "상위 유전자: " + "\n상위 유전자: ".join([str(g) for g in genepool[:3]])
+                    f"평균 적응도: [{round(average_fitness, 3)}] "
+                    f"최저 적응도: [{round(worst_fitness, 3)}]"
+                    "\n상위 유전자: " + str(genepool[0])
+                    # "\n상위 유전자: " + "\n상위 유전자: ".join([str(g) for g in genepool[:3]])
                 )
             )
 
@@ -203,8 +211,8 @@ def main(**kwargs):
         genepool.next_generation(
             selection.method_helper(
                 selection.heuristic_rank,
-                best_rank_ratio=0.1,
-                randoom_sample_cutoff_ratio=0.4,
+                best_rank_ratio=0.2,
+                randoom_sample_cutoff_ratio=0.5,
                 randoom_sample_k=20,
             ),
             crossover.two_point_crossover,
@@ -232,13 +240,17 @@ def main(**kwargs):
             f"[{str(idx + 1).zfill(gene_answer_list_str_len)}]번 "
             f"합계: [{str(divide_sum := sum(divide)).rjust(target_list_sum_str_len)}] "
             f"목표 합계: [{str(answer_list[idx]).rjust(target_list_sum_str_len + 2)}] "
-            f"비율: [{str(round((divide_sum / target_list_sum) * 100, 2)).rjust(6)}%] "
-            f"목표 비율: [{str(round(dest_list[idx] * 100, 2)).rjust(6)}%] "
+            f"비율: [{str(round((gene_ratio := (divide_sum / target_list_sum) * 100), 2)).rjust(6)}%] "
+            f"목표 비율: [{str(round((target_ratio := dest_list[idx] * 100), 2)).rjust(6)}%] "
+            f"오차: [{str(round(abs(gene_ratio - target_ratio), 6)).rjust(10)}%] "
             "분배목록: [" + ",".join([str(d) for d in divide]) + "]"
         )
     logger.info("\n".join(result_msg))
 
     if use_graph:
+        if use_progress_graph:
+            is_frame_update_need[0] = False
+
         plt.figure(figure_counter, figsize=(16, 8), dpi=80)
         figure_counter += 1
 

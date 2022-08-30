@@ -215,4 +215,4 @@ class HandlerDestFilter(logging.Filter):
     def _format_line(self, record: logging.LogRecord):
         if not isinstance(record.msg, str):
             record.msg = str(record.msg)
-        record.msg = self.LINE_FORMATTER_REGEX.sub("\n\t-> ", record.msg)
+        record.msg = self.LINE_FORMATTER_REGEX.sub("\n  -> ", record.msg)
