@@ -59,6 +59,9 @@ class BaseGene(BaseClass):
     def __getitem__(self, index) -> int:
         return self._data[index]
 
+    def __eq__(self, other_gene):
+        return self._data == other_gene._data
+
 
 class BaseGenePool(BaseClass):
     def __init__(self) -> None:
@@ -84,6 +87,14 @@ class BaseGenePool(BaseClass):
     @property
     def worst_fitness(self):
         return self._worst_fitness
+
+    def dup_check(self, new_gene: BaseGene):
+        for g in self._data:
+            if g is new_gene:
+                continue
+            if g == new_gene:
+                return True
+        return False
 
     @abstractmethod
     def fitness_calc(self, calc_func: Callable, data):

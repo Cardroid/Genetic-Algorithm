@@ -30,7 +30,8 @@ def single_point_crossover(parents_gene_list: List[Tuple[Gene, Gene]], genepool:
             child_gene[gene_idx] = d
             gene_idx += 1
 
-        crossover_idx += 1
+        if not genepool.dup_check(child_gene):
+            crossover_idx += 1
 
 
 def two_point_crossover(parents_gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, elite_gene: Gene):
@@ -64,7 +65,8 @@ def two_point_crossover(parents_gene_list: List[Tuple[Gene, Gene]], genepool: Ge
             child_gene[gene_idx] = d
             gene_idx += 1
 
-        crossover_idx += 1
+        if not genepool.dup_check(child_gene):
+            crossover_idx += 1
 
 
 def uniform_crossover(parents_gene_list: List[Tuple[Gene, Gene]], genepool: GenePool, elite_gene: Gene):
