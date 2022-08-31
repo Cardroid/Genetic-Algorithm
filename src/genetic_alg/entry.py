@@ -24,7 +24,7 @@ def main():
     parser.add_argument("--log-level", dest="log_level", default=log.ROOT_LOG_LEVEL, choices=["debug", "info", "warning", "error", "critical"], help="로그 출력 레벨")
     parser.add_argument("--no-setup", dest="use_setup", action="store_false", help="자세한 설정 사용 여부 (해당 옵션을 사용할 경우, 기본값으로 진행합니다.)")
     parser.add_argument("--no-graph", dest="use_graph", action="store_false", help="그래프 시각화 사용여부")
-    parser.add_argument("--no-progress-graph", dest="use_progress_graph", action="store_false", help="그래프 시각화 사용여부")
+    parser.add_argument("--no-progress-graph", dest="use_progress_graph", action="store_false", help="유전자 풀 진행 그래프 사용여부")
 
     args = vars(parser.parse_args())
 
