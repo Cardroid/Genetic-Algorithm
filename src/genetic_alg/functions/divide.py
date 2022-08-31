@@ -62,12 +62,8 @@ def main(**kwargs):
     # Setup
     settings = {}
 
-    settings["gene_count"] = dest_list_len * 12 + 8
-    if settings["gene_count"] > 1024:
-        settings["gene_count"] = 1024
-
-    settings["epoch"] = round(settings["gene_count"] * target_list_len / 10)
-
+    settings["gene_count"] = 128
+    settings["epoch"] = 5000
     settings["mutation_ratio"] = 0.25
     settings["target_fitness"] = 0
 
@@ -103,7 +99,7 @@ def main(**kwargs):
     genepool = GenePool()
 
     def gene_mutation_func(data: List[int]):
-        for _ in range(3):
+        for _ in range(5):
             idx = random.randint(0, len(data) - 1)
             data[idx] = random.randint(0, dest_list_len - 1)
 
