@@ -62,7 +62,7 @@ def main(**kwargs):
     # Setup
     settings = {}
 
-    settings["gene_count"] = 128
+    settings["gene_count"] = 500
     settings["epoch"] = 5000
     settings["mutation_ratio"] = 0.3
     settings["target_fitness"] = 0
